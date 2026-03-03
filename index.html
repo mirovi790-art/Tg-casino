@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Casino Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; margin: 0; padding: 20px; }
+        .profile { background: #333; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .balance { font-size: 24px; color: #4CAF50; font-weight: bold; }
+        .slot-container { background: #222; border: 2px solid #444; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
+        .reels { font-size: 40px; margin-bottom: 15px; letter-spacing: 10px; }
+        button { background: #0088cc; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:disabled { background: #555; }
+        .game-title { font-size: 18px; margin-bottom: 10px; color: #aaa; }
+    </style>
+</head>
+<body>
+
+    <div class="profile">
+        <div id="username">Игрок</div>
+        <div class="balance">💰 <span id="balance">1000</span></div>
+    </div>
+
+    <!-- Вид 1: Фрукты -->
+    <div class="slot-container">
+        <div class="game-title">Classic Fruits (Ставка: 10)</div>
+        <div class="reels" id="reels1">🍒🍋🍉</div>
+        <button onclick="playSlot(1, 10, ['🍒', '🍋', '🍉', '🍇', '🔔'])">Крутить</button>
+    </div>
+
+    <!-- Вид 2: Пираты -->
+    <div class="slot-container">
+        <div class="game-title">Pirate Treasure (Ставка: 50)</div>
+        <div class="reels" id="reels2">⚓️🏴‍☠️💎</div>
+        <button onclick="playSlot(2, 50, ['⚓️', '🏴‍☠️', '💎', '💰', '⚔️'])">Крутить</button>
+    </div>
+
+    <!-- Вид 3: Космос -->
+    <div class="slot-container">
+        <div class="game-title">Space Gems (Ставка: 100)</div>
+        <div class="reels" id="reels3">🚀🛸🪐</div>
+        <button onclick="playSlot(3, 100, ['🚀', '🛸', '🪐', '🌌', '⭐'])">Крутить</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+
+        let balance = parseInt(localStorage.getItem('balance')) || 1000;
+        document.getElementById('balance').innerText = balance;
+        document.getElementById('username').innerText = tg.initDataUnsafe.user?.first_name || "Гость";
+
+        function playSlot(id, cost, symbols) {
+            if (balance < cost) {
+                alert("Недостаточно монет!");
+                return;
+            }
+
+            balance -= cost;
+            updateBalance();
+
+            const reelDisplay = document.getElementById('reels' + id);
+            let results = [];
+            
+            // Анимация "крутилки"
+            let count = 0;
+            let interval = setInterval(() => {
+                results = [
+                    symbols[Math.floor(Math.random() * symbols.length)],
+                    symbols[Math.floor(Math.random() * symbols.length)],
+                    symbols[Math.floor(Math.random() * symbols.length)]
+                ];
+                reelDisplay.innerText = results.join('');
+                count++;
+                if (count > 10) {
+                    clearInterval(interval);
+                    checkWin(results, cost);
+                }
+            }, 50);
+        }
+
+        function checkWin(results, cost) {
+            // Если все три символа совпали
+            if (results[0] === results[1] && results[1] === results[2]) {
+                let winAmount = cost * 10;
+                balance += winAmount;
+                alert("ДЖЕКПОТ! Вы выиграли " + winAmount);
+            } 
+            // Если совпали только два
+            else if (results[0] === results[1] || results[1] === results[2] || results[0] === results[2]) {
+                let winAmount = Math.floor(cost * 1.5);
+                balance += winAmount;
+            }
+            updateBalance();
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').innerText = balance;
+            localStorage.setItem('balance', balance);
+        }
+    </script>
+</body>
+</html>
